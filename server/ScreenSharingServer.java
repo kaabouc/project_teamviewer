@@ -19,6 +19,10 @@ public class ScreenSharingServer extends UnicastRemoteObject implements ScreenSh
 
     protected ScreenSharingServer() throws RemoteException {
         screenshots = new ArrayList<>();
+        File fileDir = new File(System.getProperty("user.home") + "/Desktop/server_files");
+        if (!fileDir.exists()) {
+            fileDir.mkdir();
+        }
     }
 
     @Override
@@ -56,37 +60,36 @@ public class ScreenSharingServer extends UnicastRemoteObject implements ScreenSh
 
     @Override
     public synchronized void sendFile(String fileName, byte[] data) throws RemoteException {
-        try (FileOutputStream fos = new FileOutputStream("server_files/" + fileName)) {
+        File fileDir = new File(System.getProperty("user.home") + "/Desktop/server_files");
+        try (FileOutputStream fos = new FileOutputStream(new File(fileDir, fileName))) {
             fos.write(data);
+            fos.flush();
         } catch (IOException e) {
             e.printStackTrace();
-            throw new RemoteException("Error writing file", e);
+            throw new RemoteException("Error writing file: " + e.getMessage(), e);
         }
     }
 
     @Override
     public synchronized byte[] receiveFile(String fileName) throws RemoteException {
+        File fileDir = new File(System.getProperty("user.home") + "/Desktop/server_files");
         try {
-            return Files.readAllBytes(new File("server_files/" + fileName).toPath());
+            return Files.readAllBytes(new File(fileDir, fileName).toPath());
         } catch (IOException e) {
             e.printStackTrace();
-            throw new RemoteException("Error reading file", e);
+            throw new RemoteException("Error reading file: " + e.getMessage(), e);
         }
     }
 
     @Override
     public synchronized String[] listFiles() throws RemoteException {
-        File folder = new File("server_files");
-        if (!folder.exists()) {
-            folder.mkdirs();
-        }
+        File folder = new File(System.getProperty("user.home") + "/Desktop/server_files");
         return folder.list();
     }
 
     public static void main(String[] args) {
         try {
             LocateRegistry.createRegistry(1099);
-
             ScreenSharingServer server = new ScreenSharingServer();
             Naming.rebind("ScreenSharingServer", server);
             System.out.println("Server is ready.");

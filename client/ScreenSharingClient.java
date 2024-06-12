@@ -81,7 +81,7 @@ public class ScreenSharingClient {
                         JOptionPane.showMessageDialog(frame, "File sent successfully!");
                     } catch (Exception ex) {
                         ex.printStackTrace();
-                        JOptionPane.showMessageDialog(frame, "Error sending file.");
+                        JOptionPane.showMessageDialog(frame, "Error sending file: " + ex.getMessage());
                     }
                 }
             });
@@ -92,13 +92,17 @@ public class ScreenSharingClient {
                     String selectedFile = (String) JOptionPane.showInputDialog(frame, "Select file to receive:", "Receive File", JOptionPane.QUESTION_MESSAGE, null, files, files[0]);
                     if (selectedFile != null) {
                         byte[] data = server.receiveFile(selectedFile);
-                        File file = new File(System.getProperty("user.home") + "/Desktop/receive/" + selectedFile);
+                        File receiveDir = new File(System.getProperty("user.home") + "/Desktop/receive");
+                        if (!receiveDir.exists()) {
+                            receiveDir.mkdir();
+                        }
+                        File file = new File(receiveDir, selectedFile);
                         Files.write(file.toPath(), data);
-                        JOptionPane.showMessageDialog(frame, "File received and saved to Desktop!");
+                        JOptionPane.showMessageDialog(frame, "File received and saved to Desktop/receive");
                     }
                 } catch (Exception ex) {
                     ex.printStackTrace();
-                    JOptionPane.showMessageDialog(frame, "Error receiving file.");
+                    JOptionPane.showMessageDialog(frame, "Error receiving file: " + ex.getMessage());
                 }
             });
 
@@ -158,7 +162,7 @@ public class ScreenSharingClient {
 
             Point cursorLocation = MouseInfo.getPointerInfo().getLocation();
             Graphics2D g = screenCapture.createGraphics();
-//            g.setColor(new Color(255, 0, 0, 128));
+            g.setColor(new Color(255, 0, 0, 128));
             g.fillOval(cursorLocation.x, cursorLocation.y, 15, 15);
             g.dispose();
 
